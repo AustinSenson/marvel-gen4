@@ -1,0 +1,12 @@
+# [submodule "can-tp-module-threadx"]
+[submodule "Library/Utility/can-tp-module-threadx"]
+	path = Library/Utility/can-tp-module-threadx
+	url = https://github.com/eulermotor/can-tp-module-threadx
+	branch = dev/staging
+
+[submodule "Tests/CMock"]
+	path = Tests/CMock
+	url = https://github.com/ThrowTheSwitch/CMock.git
+[submodule "Library/MATLAB/MARVEL_MBD_SUBMODULE"]
+	path = Library/MATLAB/MARVEL_MBD_SUBMODULE
+	url = https://github.com/AustinSenson/MARVEL_MBD_SUBMODULE.git
