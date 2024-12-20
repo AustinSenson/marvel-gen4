@@ -240,6 +240,9 @@ int main(void)
   
   /* USER CODE END 2 */
   resetShortCircuit(shortCircuit);
+  // turnContactorON(chargeNegative);
+  // turnContactorON(commonPositive);
+
   tx_kernel_enter();
   /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */

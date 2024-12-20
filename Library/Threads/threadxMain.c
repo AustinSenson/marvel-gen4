@@ -471,7 +471,7 @@ VOID threadxTimerCallback(ULONG input)
     #endif
     
 
-    sendDataOnCAN(&mdata, &pOutputData, &ccOutputData, &dpOutputData, &pInputData);
+    sendDataOnCAN(&mdata, &pOutputData, &ccOutputData, &dpOutputData, &pInputData, &cInputData);
     sendChargingDataOnCAN(CELL_CHARGING_VOLTAGE * CELL_IN_SERIES, requestedCurrent_A);      
     sendCANDataOnQueue(MARVEL_OFF_READY,&shutdownCount, sizeof(shutdownCount));
 
@@ -940,46 +940,48 @@ void entry_collectBatteryData(ULONG threadInput)
     // publish GIT_SHA on startup
     status = publishMarvelGitSha();
     
-    // status = collectDataFromMemory();
+    status = collectDataFromMemory();
 
-    // if((!eepromCorrupted) && (tx_event_flags_get(&systemEventFlag, EEPROM_READ_FAIL, TX_OR, &actualFlag, 0x10) != TX_SUCCESS))     // normal EEPROM reading
-    // {
-    //     readEEPROMDataFromBuffer(&ccOutputDataEEPROM, socDataReadBuff, ccReadBufferFLASH, SOC_SECTION);
-    //     readEEPROMDataFromBuffer(&ccOutputDataEEPROM, criticalFlagsReadBuff, ccReadBufferFLASH, CRITICAL_FLAGS);
-    // }
-    // else if((!eepromCorrupted) && (tx_event_flags_get(&systemEventFlag, EEPROM_READ_FAIL, TX_OR, &actualFlag, 0x10) == TX_SUCCESS))
-    // {
-    //     // code flow will come here when handle is not passed to flash and EEPROM read was failed after retry
-    //     // SoC should be chosen from SoC-OCV curve and the readBuff should be filled accordingly
-    //     // Store values in Flash too
-    //     SoCFromLookupTableFlag = true;
-    //     eepromCorruptedWarning++;
-    //     flashWriteKey = true;
-    // }
-    // else
-    // {   
-    //     //Code reaches here only when Corruption declared and Flash is given control 
+    if((!eepromCorrupted) && (tx_event_flags_get(&systemEventFlag, EEPROM_READ_FAIL, TX_OR, &actualFlag, 0x10) != TX_SUCCESS))     // normal EEPROM reading
+    {
+        readEEPROMDataFromBuffer(&ccOutputDataEEPROM, socDataReadBuff, ccReadBufferFLASH, SOC_SECTION);
+        readEEPROMDataFromBuffer(&ccOutputDataEEPROM, criticalFlagsReadBuff, ccReadBufferFLASH, CRITICAL_FLAGS);
+    }
+    else if((!eepromCorrupted) && (tx_event_flags_get(&systemEventFlag, EEPROM_READ_FAIL, TX_OR, &actualFlag, 0x10) == TX_SUCCESS))
+    {
+        // code flow will come here when handle is not passed to flash and EEPROM read was failed after retry
+        // SoC should be chosen from SoC-OCV curve and the readBuff should be filled accordingly
+        // Store values in Flash too
+        SoCFromLookupTableFlag = true;
+        eepromCorruptedWarning++;
+        flashWriteKey = true;
+    }
+    else
+    {   
+        //Code reaches here only when Corruption declared and Flash is given control 
        
-    //     ccOutputDataFlash.initialCapacity           = ccReadBufferFLASH[0];
-    //     ccOutputDataFlash.totalCapacityRemaining    = ccReadBufferFLASH[1];  
-    //     ccOutputDataEEPROM.totalCapacityDischarge   = ccReadBufferFLASH[2];
-    //     ccOutputDataFlash.SOC_pct                   = ccReadBufferFLASH[4];  
-    //     eepromCorruptedWarning                      = ccReadBufferFLASH[5];
-    //     recordedCycleCountMBD                       = ccReadBufferFLASH[6];
-    //     fullChargeLatch                             = ccReadBufferFLASH[8];
-    //     pseudoLatchFlag                             = ccReadBufferFLASH[9];
-    //     memcpy(&ccOutputDataFlash.CycleCount, &ccReadBufferFLASH[3], sizeof(float));
-    //     memcpy(&internalResistance, &ccReadBufferFLASH[7], sizeof(double));
+        ccOutputDataFlash.initialCapacity           = ccReadBufferFLASH[0];
+        ccOutputDataFlash.totalCapacityRemaining    = ccReadBufferFLASH[1];  
+        ccOutputDataEEPROM.totalCapacityDischarge   = ccReadBufferFLASH[2];
+        ccOutputDataFlash.SOC_pct                   = ccReadBufferFLASH[4];  
+        eepromCorruptedWarning                      = ccReadBufferFLASH[5];
+        recordedCycleCountMBD                       = ccReadBufferFLASH[6];
+        fullChargeLatch                             = ccReadBufferFLASH[8];
+        pseudoLatchFlag                             = ccReadBufferFLASH[9];
+        memcpy(&ccOutputDataFlash.CycleCount, &ccReadBufferFLASH[3], sizeof(float));
+        memcpy(&internalResistance, &ccReadBufferFLASH[7], sizeof(double));
 
-    // }
+    }
 
-    // tx_event_flags_set(&systemEventFlag, DATA_COLLECTION_SUCCESSFUL, TX_OR);
+    tx_event_flags_set(&systemEventFlag, DATA_COLLECTION_SUCCESSFUL, TX_OR);
 
     // handling EEPROM data collection and data corruption scenarios 
     status = handleEEPROMDataCollection();
     
     while(1)
     {
+
+        tx_thread_preemption_change(&collectBatteryData, priority_P0, &oldPriority);             //Raise the priority level temporarily
 
         if((cbOutputData.balancingState == 0) || (cbOutputData.balancingState == 1))
         {
@@ -992,11 +994,13 @@ void entry_collectBatteryData(ULONG threadInput)
         // RETRY(RETRY_CMU_READ, status, readPackStatus(&mdata));
 
         // Read Temp from MCU
-        RETRY(RETRY_CMU_READ, status, readCellTemperaturesValues(&mdata)); 
+        // RETRY(RETRY_CMU_READ, status, readCellTemperaturesValues(&mdata)); 
 
         // // reading from ADBMS2950
-        RETRY(RETRY_CCM_READ, status, readPackVoltageCurrent(&mdata));       
+        RETRY(RETRY_CCM_READ, status, readPackVoltageCurrent(&mdata));  
 
+        tx_thread_preemption_change(&collectBatteryData, oldPriority, &oldPriority);             //Restore old priority
+     
         // DCC discharge test function. Turning on all 16 mosfets
         // cellsToBalance[0] = 0xFFFF;     // setting all 16 bits
 
@@ -1482,11 +1486,11 @@ bmsStatus_t dataPipelineInput(bmsMainData_t *mdata, dataPipelineInput_t *dpInput
     #endif
 
     //cell voltages 
-	for(uint8_t cmuIndex = 0; cmuIndex < 3; cmuIndex++)
+	for(uint8_t cmuIndex = 1; cmuIndex < 2; cmuIndex++)
 	{
-		for(uint8_t cellIndex = 0; cellIndex < 15; cellIndex++)
+		for(uint8_t cellIndex = 0; cellIndex < 18; cellIndex++)
 		{
-			dpInput->voltage[(cellIndex) + cmuIndex*15] = mdata->cmuData.cmuVolatges.cellVoltages[cmuIndex+1][cellIndex];
+			dpInput->voltage[cellIndex] = mdata->cmuData.cmuVolatges.cellVoltages[cmuIndex][cellIndex];
 		}
 	}
 
@@ -1559,7 +1563,7 @@ bmsStatus_t dataPipelineInput(bmsMainData_t *mdata, dataPipelineInput_t *dpInput
     dpInputMBD->FastChargersCurrentLimit_A   = dpInput->FastChargersCurrentLimit_A;
     dpInputMBD->SlowChargersCurrentLimit_A   = dpInput->SlowChargersCurrentLimit_A;
 
-    for(uint8_t i = 0; i < 30; i++)
+    for(uint8_t i = 0; i < 18; i++)
     {
         dpInputMBD->VoltageSense_mV[i]       = dpInput->voltage[i];
     }
@@ -2414,6 +2418,8 @@ bmsStatus_t contactorInput(bmsMainData_t *mdata, dataPipelineOutput_t *dpOutput,
         }
     }
 
+    // cInput->contactorCommand = 1;
+
     switch(contState)
     {
         case INITIALIZING:
@@ -2555,6 +2561,7 @@ bmsStatus_t contactorOutput(bmsMainData_t *mdata, contactorOutput_t *cOutput, Ex
     // cOutput->Elapsed_TimeToOpen_msec    = cOutputMBD->Elapsed_TimeToOpen_msec;
     
     if(externalShortCircuitFlag)
+    // if(1)
     {
         //Switch off contactor
         TIM3 -> CCR1 = 0;
@@ -2564,7 +2571,7 @@ bmsStatus_t contactorOutput(bmsMainData_t *mdata, contactorOutput_t *cOutput, Ex
     }
     else 
     {
-        if((cOutput->negativeContactorState) && (externalToggle))
+        if(1)
         {
             turnContactorON(chargeNegative);
         }
@@ -2583,7 +2590,7 @@ bmsStatus_t contactorOutput(bmsMainData_t *mdata, contactorOutput_t *cOutput, Ex
             turnContactorOFF(prechargePositive);
         }
 
-        if ((cOutput->positiveContactorState) && (externalToggle))
+        if (1)
         {
             turnContactorON(commonPositive);
 

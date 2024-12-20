@@ -111,8 +111,8 @@
     #define ADBMS6832_DAISYCHAIN_END          ADBMS6832_START_INDEX + NUMBER_OF_CMU                                          
     #define ADBMS2950_DAISYCHAIN_INDEX          1
     #define ADBMS6832_START_INDEX               1          
-    #define NUMBER_OF_CMU                       3      
-    #define CELL_IN_SERIES                      30                                                  //20S
+    #define NUMBER_OF_CMU                       2      
+    #define CELL_IN_SERIES                      18                                                  //20S
     
     //cell per slave
     #define MAX_CELL_PER_SLAVE                  18                                                  //CMU-ADBMS6815

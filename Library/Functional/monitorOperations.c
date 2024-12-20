@@ -451,6 +451,7 @@ bmsStatus_t readPackVoltageCurrent(bmsMainData_t *mdata)
 
 	mdata->ccmData.packCurrent = (int32_t)mdata->cmuData.cmuCellData[0].ivbat.i1 * 0.000001f;
 	mdata->ccmData.packCurrent = mdata->ccmData.packCurrent/CONVERT_MICRO_OHM_TO_OHM(SHUNT_RESISTOR_uOhm);
+
  	// PACK VOLTAGE SENSING
 	mdata->ccmData.packVoltage = (int16_t)(mdata->cmuData.cmuCellData[0].ivbat.vbat1) * 0.0001f;
 
@@ -459,8 +460,6 @@ bmsStatus_t readPackVoltageCurrent(bmsMainData_t *mdata)
 
 	return status;
 }
-
-
 
 /* Function definition -------------------------------------------------------*/
 /**
@@ -500,7 +499,7 @@ bmsStatus_t initializeCCM(void)
  * @param 
  * @retval BMS status
  */
-bmsStatus_t sendDataOnCAN(bmsMainData_t *mdata, protectionOutput_t *pOutput, coulombCountingOutput_t *ccOutput, dataPipelineOutput_t *dpOutput, protectionInput_t *pInput)
+bmsStatus_t sendDataOnCAN(bmsMainData_t *mdata, protectionOutput_t *pOutput, coulombCountingOutput_t *ccOutput, dataPipelineOutput_t *dpOutput, protectionInput_t *pInput, contactorInput_t *cInput)
 {
 	bmsStatus_t status = BMS_ERROR;
 	uint8_t canDataFrame[8] = {'\0'};
@@ -650,64 +649,64 @@ bmsStatus_t sendDataOnCAN(bmsMainData_t *mdata, protectionOutput_t *pOutput, cou
 
 
 		for(int8_t canDLC = CAN_cmu2Cell1.messageDLC - 1; canDLC >= 0; canDLC--)
-			canDataFrame[CAN_cmu2Cell1.messageStartByte + canDLC] = ((int) (mdata->cmuData.cmuVolatges.cellVoltages[2][0]/CAN_cmu2Cell1.messageScaling)  >> (8 * canDLC));
+			canDataFrame[CAN_cmu2Cell1.messageStartByte + canDLC] = ((int) (mdata->cmuData.cmuVolatges.cellVoltages[1][16]/CAN_cmu2Cell1.messageScaling)  >> (8 * canDLC));
 		
 		for(int8_t canDLC = CAN_cmu2Cell2.messageDLC - 1; canDLC >= 0; canDLC--)
-			canDataFrame[CAN_cmu2Cell2.messageStartByte + canDLC] = ((int) (mdata->cmuData.cmuVolatges.cellVoltages[2][1]/CAN_cmu2Cell2.messageScaling)  >> (8 * canDLC));
+			canDataFrame[CAN_cmu2Cell2.messageStartByte + canDLC] = ((int) (mdata->cmuData.cmuVolatges.cellVoltages[1][17]/CAN_cmu2Cell2.messageScaling)  >> (8 * canDLC));
 		
-		for(int8_t canDLC = CAN_cmu2Cell3.messageDLC - 1; canDLC >= 0; canDLC--)
-			canDataFrame[CAN_cmu2Cell3.messageStartByte + canDLC] = ((int) (mdata->cmuData.cmuVolatges.cellVoltages[2][2]/CAN_cmu2Cell3.messageScaling)  >> (8 * canDLC));
+		// for(int8_t canDLC = CAN_cmu2Cell3.messageDLC - 1; canDLC >= 0; canDLC--)
+		// 	canDataFrame[CAN_cmu2Cell3.messageStartByte + canDLC] = ((int) (mdata->cmuData.cmuVolatges.cellVoltages[2][2]/CAN_cmu2Cell3.messageScaling)  >> (8 * canDLC));
 		
-		for(int8_t canDLC = CAN_cmu2Cell4.messageDLC - 1; canDLC >= 0; canDLC--)
-			canDataFrame[CAN_cmu2Cell4.messageStartByte + canDLC] = ((int) (mdata->cmuData.cmuVolatges.cellVoltages[2][3]/CAN_cmu2Cell4.messageScaling)  >> (8 * canDLC));
+		// for(int8_t canDLC = CAN_cmu2Cell4.messageDLC - 1; canDLC >= 0; canDLC--)
+		// 	canDataFrame[CAN_cmu2Cell4.messageStartByte + canDLC] = ((int) (mdata->cmuData.cmuVolatges.cellVoltages[2][3]/CAN_cmu2Cell4.messageScaling)  >> (8 * canDLC));
 		
 	status = sendCANDataOnQueue(CAN_cmu2Cell4.messageID, canDataFrame, sizeof(canDataFrame));
 	CHECK_STATUS(status);
 
-		for(int8_t canDLC = CAN_cmu2Cell5.messageDLC - 1; canDLC >= 0; canDLC--)
-			canDataFrame[CAN_cmu2Cell5.messageStartByte + canDLC] = ((int) (mdata->cmuData.cmuVolatges.cellVoltages[2][4]/CAN_cmu2Cell5.messageScaling)  >> (8 * canDLC));
+	// 	for(int8_t canDLC = CAN_cmu2Cell5.messageDLC - 1; canDLC >= 0; canDLC--)
+	// 		canDataFrame[CAN_cmu2Cell5.messageStartByte + canDLC] = ((int) (mdata->cmuData.cmuVolatges.cellVoltages[2][4]/CAN_cmu2Cell5.messageScaling)  >> (8 * canDLC));
 		
-		for(int8_t canDLC = CAN_cmu2Cell6.messageDLC - 1; canDLC >= 0; canDLC--)
-			canDataFrame[CAN_cmu2Cell6.messageStartByte + canDLC] = ((int) (mdata->cmuData.cmuVolatges.cellVoltages[2][5]/CAN_cmu2Cell6.messageScaling)  >> (8 * canDLC));
+	// 	for(int8_t canDLC = CAN_cmu2Cell6.messageDLC - 1; canDLC >= 0; canDLC--)
+	// 		canDataFrame[CAN_cmu2Cell6.messageStartByte + canDLC] = ((int) (mdata->cmuData.cmuVolatges.cellVoltages[2][5]/CAN_cmu2Cell6.messageScaling)  >> (8 * canDLC));
 		
-		for(int8_t canDLC = CAN_cmu2Cell7.messageDLC - 1; canDLC >= 0; canDLC--)
-			canDataFrame[CAN_cmu2Cell7.messageStartByte + canDLC] = ((int) (mdata->cmuData.cmuVolatges.cellVoltages[2][6]/CAN_cmu2Cell7.messageScaling)  >> (8 * canDLC));
+	// 	for(int8_t canDLC = CAN_cmu2Cell7.messageDLC - 1; canDLC >= 0; canDLC--)
+	// 		canDataFrame[CAN_cmu2Cell7.messageStartByte + canDLC] = ((int) (mdata->cmuData.cmuVolatges.cellVoltages[2][6]/CAN_cmu2Cell7.messageScaling)  >> (8 * canDLC));
 		
-		for(int8_t canDLC = CAN_cmu2Cell8.messageDLC - 1; canDLC >= 0; canDLC--)
-			canDataFrame[CAN_cmu2Cell8.messageStartByte + canDLC] = ((int) (mdata->cmuData.cmuVolatges.cellVoltages[2][7]/CAN_cmu2Cell8.messageScaling)  >> (8 * canDLC));
+	// 	for(int8_t canDLC = CAN_cmu2Cell8.messageDLC - 1; canDLC >= 0; canDLC--)
+	// 		canDataFrame[CAN_cmu2Cell8.messageStartByte + canDLC] = ((int) (mdata->cmuData.cmuVolatges.cellVoltages[2][7]/CAN_cmu2Cell8.messageScaling)  >> (8 * canDLC));
 		
-	status = sendCANDataOnQueue(CAN_cmu2Cell8.messageID, canDataFrame, sizeof(canDataFrame));
-	CHECK_STATUS(status);
+	// status = sendCANDataOnQueue(CAN_cmu2Cell8.messageID, canDataFrame, sizeof(canDataFrame));
+	// CHECK_STATUS(status);
 
-		for(int8_t canDLC = CAN_cmu2Cell9.messageDLC - 1; canDLC >= 0; canDLC--)
-			canDataFrame[CAN_cmu2Cell9.messageStartByte + canDLC] = ((int) (mdata->cmuData.cmuVolatges.cellVoltages[2][8]/CAN_cmu2Cell9.messageScaling)  >> (8 * canDLC));
+	// 	for(int8_t canDLC = CAN_cmu2Cell9.messageDLC - 1; canDLC >= 0; canDLC--)
+	// 		canDataFrame[CAN_cmu2Cell9.messageStartByte + canDLC] = ((int) (mdata->cmuData.cmuVolatges.cellVoltages[2][8]/CAN_cmu2Cell9.messageScaling)  >> (8 * canDLC));
 		
-		for(int8_t canDLC = CAN_cmu2Cell10.messageDLC - 1; canDLC >= 0; canDLC--)
-			canDataFrame[CAN_cmu2Cell10.messageStartByte + canDLC] = ((int) (mdata->cmuData.cmuVolatges.cellVoltages[2][9]/CAN_cmu2Cell10.messageScaling)  >> (8 * canDLC));
+	// 	for(int8_t canDLC = CAN_cmu2Cell10.messageDLC - 1; canDLC >= 0; canDLC--)
+	// 		canDataFrame[CAN_cmu2Cell10.messageStartByte + canDLC] = ((int) (mdata->cmuData.cmuVolatges.cellVoltages[2][9]/CAN_cmu2Cell10.messageScaling)  >> (8 * canDLC));
 		
-		for(int8_t canDLC = CAN_cmu2Cell11.messageDLC - 1; canDLC >= 0; canDLC--)
-			canDataFrame[CAN_cmu2Cell11.messageStartByte + canDLC] = ((int) (mdata->cmuData.cmuVolatges.cellVoltages[2][10]/CAN_cmu2Cell11.messageScaling)  >> (8 * canDLC));
+	// 	for(int8_t canDLC = CAN_cmu2Cell11.messageDLC - 1; canDLC >= 0; canDLC--)
+	// 		canDataFrame[CAN_cmu2Cell11.messageStartByte + canDLC] = ((int) (mdata->cmuData.cmuVolatges.cellVoltages[2][10]/CAN_cmu2Cell11.messageScaling)  >> (8 * canDLC));
 		
-		for(int8_t canDLC = CAN_cmu2Cell12.messageDLC - 1; canDLC >= 0; canDLC--)
-			canDataFrame[CAN_cmu2Cell12.messageStartByte + canDLC] = ((int) (mdata->cmuData.cmuVolatges.cellVoltages[2][11]/CAN_cmu2Cell12.messageScaling)  >> (8 * canDLC));
+	// 	for(int8_t canDLC = CAN_cmu2Cell12.messageDLC - 1; canDLC >= 0; canDLC--)
+	// 		canDataFrame[CAN_cmu2Cell12.messageStartByte + canDLC] = ((int) (mdata->cmuData.cmuVolatges.cellVoltages[2][11]/CAN_cmu2Cell12.messageScaling)  >> (8 * canDLC));
 		
-	status = sendCANDataOnQueue(CAN_cmu2Cell12.messageID, canDataFrame, sizeof(canDataFrame));
-	CHECK_STATUS(status);
+	// status = sendCANDataOnQueue(CAN_cmu2Cell12.messageID, canDataFrame, sizeof(canDataFrame));
+	// CHECK_STATUS(status);
 
-		for(int8_t canDLC = CAN_cmu2Cell13.messageDLC - 1; canDLC >= 0; canDLC--)
-			canDataFrame[CAN_cmu2Cell13.messageStartByte + canDLC] = ((int) (mdata->cmuData.cmuVolatges.cellVoltages[2][12]/CAN_cmu2Cell13.messageScaling)  >> (8 * canDLC));
+	// 	for(int8_t canDLC = CAN_cmu2Cell13.messageDLC - 1; canDLC >= 0; canDLC--)
+	// 		canDataFrame[CAN_cmu2Cell13.messageStartByte + canDLC] = ((int) (mdata->cmuData.cmuVolatges.cellVoltages[2][12]/CAN_cmu2Cell13.messageScaling)  >> (8 * canDLC));
 		
-		for(int8_t canDLC = CAN_cmu2Cell14.messageDLC - 1; canDLC >= 0; canDLC--)
-			canDataFrame[CAN_cmu2Cell14.messageStartByte + canDLC] = ((int) (mdata->cmuData.cmuVolatges.cellVoltages[2][13]/CAN_cmu2Cell14.messageScaling)  >> (8 * canDLC));
+	// 	for(int8_t canDLC = CAN_cmu2Cell14.messageDLC - 1; canDLC >= 0; canDLC--)
+	// 		canDataFrame[CAN_cmu2Cell14.messageStartByte + canDLC] = ((int) (mdata->cmuData.cmuVolatges.cellVoltages[2][13]/CAN_cmu2Cell14.messageScaling)  >> (8 * canDLC));
 		
-		for(int8_t canDLC = CAN_cmu2Cell15.messageDLC - 1; canDLC >= 0; canDLC--)
-			canDataFrame[CAN_cmu2Cell15.messageStartByte + canDLC] = ((int) (mdata->cmuData.cmuVolatges.cellVoltages[2][14]/CAN_cmu2Cell15.messageScaling)  >> (8 * canDLC));
+	// 	for(int8_t canDLC = CAN_cmu2Cell15.messageDLC - 1; canDLC >= 0; canDLC--)
+	// 		canDataFrame[CAN_cmu2Cell15.messageStartByte + canDLC] = ((int) (mdata->cmuData.cmuVolatges.cellVoltages[2][14]/CAN_cmu2Cell15.messageScaling)  >> (8 * canDLC));
 		
-		for(int8_t canDLC = CAN_cmu2Cell16.messageDLC - 1; canDLC >= 0; canDLC--)
-			canDataFrame[CAN_cmu2Cell16.messageStartByte + canDLC] = ((int) (mdata->cmuData.cmuVolatges.cellVoltages[2][15]/CAN_cmu2Cell16.messageScaling)  >> (8 * canDLC));
+	// 	for(int8_t canDLC = CAN_cmu2Cell16.messageDLC - 1; canDLC >= 0; canDLC--)
+	// 		canDataFrame[CAN_cmu2Cell16.messageStartByte + canDLC] = ((int) (mdata->cmuData.cmuVolatges.cellVoltages[2][15]/CAN_cmu2Cell16.messageScaling)  >> (8 * canDLC));
 		
-	status = sendCANDataOnQueue(CAN_cmu2Cell16.messageID, canDataFrame, sizeof(canDataFrame));
-	CHECK_STATUS(status);
+	// status = sendCANDataOnQueue(CAN_cmu2Cell16.messageID, canDataFrame, sizeof(canDataFrame));
+	// CHECK_STATUS(status);
 	
 
 	for(int8_t canDLC = CAN_pIn_voltageMax.messageDLC - 1; canDLC >= 0; canDLC--)
@@ -719,7 +718,9 @@ bmsStatus_t sendDataOnCAN(bmsMainData_t *mdata, protectionOutput_t *pOutput, cou
 	for(int8_t canDLC = CAN_pIn_voltageDelta.messageDLC - 1; canDLC >= 0; canDLC--)
 		canDataFrame[CAN_pIn_voltageDelta.messageStartByte + canDLC] = ((int) (pInput->dataPipelineBus.voltageSense.voltageDelta/CAN_pIn_voltageDelta.messageScaling)  >> (8 * canDLC));
 	
-    status = sendCANDataOnQueue(CAN_pIn_voltageDelta.messageID, canDataFrame, sizeof(canDataFrame));
+	canDataFrame[6] = cInput->contactorCommand;
+	
+	status = sendCANDataOnQueue(CAN_pIn_voltageDelta.messageID, canDataFrame, sizeof(canDataFrame));
     CHECK_STATUS(status);
 	//Dynamic Currents Instantaneous
 	// for(int8_t canDLC = CAN_InstantaneousLimitIN.messageDLC -1; canDLC >= 0; canDLC--)        
@@ -809,12 +810,12 @@ bmsStatus_t sendDataOnCAN(bmsMainData_t *mdata, protectionOutput_t *pOutput, cou
 
 #endif
 
-	canDataFrame[0] = MARVEL_FW_VER;
-	canDataFrame[1] = MARVEL_HW_VER;
+	// canDataFrame[0] = MARVEL_FW_VER;
+	// canDataFrame[1] = MARVEL_HW_VER;
 
-	canDataFrame[2] = MARVEL_CONFIG;
+	// canDataFrame[2] = MARVEL_CONFIG;
 
-	status = sendCANDataOnQueue(CAN_TX_ID_024, canDataFrame, sizeof(canDataFrame));
+	// status = sendCANDataOnQueue(CAN_TX_ID_024, canDataFrame, sizeof(canDataFrame));
 
 	return status;
 

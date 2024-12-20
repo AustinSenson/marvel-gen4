@@ -59,7 +59,7 @@ bmsStatus_t calculateRemainingPackCapacity(bmsMainData_t *mdata);
 bmsStatus_t checkPackCurrent(bmsMainData_t *mdata);
 bmsStatus_t checkPackVoltages(bmsMainData_t *mdata);
 bmsStatus_t checkPackTemperatures(bmsMainData_t *mdata);
-bmsStatus_t sendDataOnCAN(bmsMainData_t *mdata, protectionOutput_t *pOutput, coulombCountingOutput_t *ccOutput, dataPipelineOutput_t *dpOutput, protectionInput_t *pInput);
+bmsStatus_t sendDataOnCAN(bmsMainData_t *mdata, protectionOutput_t *pOutput, coulombCountingOutput_t *ccOutput, dataPipelineOutput_t *dpOutput, protectionInput_t *pInput, contactorInput_t *cInput);
 bmsStatus_t readStatusFaultReg(bmsMainData_t *mdata);
 #endif
 /* End of File ---------------------------------------------------------------*/

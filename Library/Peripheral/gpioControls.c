@@ -434,13 +434,13 @@ bmsStatus_t resetShortCircuit(uint8_t gpioID)
             status = BMS_ERROR;
             break;
     }
-    externalShortCircuitDetectionFlag = (HAL_GPIO_ReadPin(SC_Detection_GPIO_Port,SC_Detection_Pin) == GPIO_PIN_SET)? 1:0;
+    // externalShortCircuitDetectionFlag = (HAL_GPIO_ReadPin(SC_Detection_GPIO_Port,SC_Detection_Pin) == GPIO_PIN_SET)? 1:0;
     
     return status;
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {   
-    externalShortCircuitDetectionFlag = 1; 
+    // externalShortCircuitDetectionFlag = 1; 
 }
 /* End of File ---------------------------------------------------------------*/
